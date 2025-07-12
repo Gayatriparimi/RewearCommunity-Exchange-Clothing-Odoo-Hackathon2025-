@@ -18,9 +18,9 @@ const navItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
   { href: '/browse', icon: Search, label: 'Browse' },
   { href: '/add-item', icon: PlusCircle, label: 'Add Item' },
-  { href: '/wishlist', icon: Heart, label: 'Wishlist' },
-  { href: '/messages', icon: MessageSquare, label: 'Messages' },
-  { href: '/notifications', icon: Bell, label: 'Notifications' },
+  { href: '/dashboard/wishlist', icon: Heart, label: 'Wishlist' },
+  { href: '/dashboard/messages', icon: MessageSquare, label: 'Messages' },
+  { href: '/dashboard/notifications', icon: Bell, label: 'Notifications' },
 ];
 
 export default function AppSidebar() {
