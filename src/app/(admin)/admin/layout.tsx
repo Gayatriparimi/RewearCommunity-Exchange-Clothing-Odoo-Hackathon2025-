@@ -32,9 +32,7 @@ export default function AdminLayout({
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-background sm:flex">
         <nav className="flex flex-col gap-4 p-4">
-          <Link href="/admin" className="mb-4">
-            <Logo />
-          </Link>
+          <Logo href="/admin" className="mb-4" />
           <Link
             href="/admin"
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
