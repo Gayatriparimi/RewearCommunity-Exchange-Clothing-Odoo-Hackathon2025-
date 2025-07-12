@@ -14,7 +14,7 @@ export default function LoginPage() {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="you@example.com" required />
+          <Input id="email" type="email" placeholder="you@example.com" required defaultValue="alex.p@example.com" />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -23,11 +23,13 @@ export default function LoginPage() {
               Forgot password?
             </Link>
           </div>
-          <Input id="password" type="password" required />
+          <Input id="password" type="password" required defaultValue="password" />
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-4">
-        <Button className="w-full font-bold">Log In</Button>
+        <Button asChild className="w-full font-bold">
+            <Link href="/dashboard">Log In</Link>
+        </Button>
         <div className="text-center text-sm text-muted-foreground">
           Don't have an account?{' '}
           <Link href="/signup" className="font-semibold text-primary hover:underline">

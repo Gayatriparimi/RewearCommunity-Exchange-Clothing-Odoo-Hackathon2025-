@@ -56,6 +56,12 @@ export default function AppHeader() {
                 >
                  Add Item
                 </Link>
+                 <Link
+                  href="/profile"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                 Profile
+                </Link>
               </nav>
             </SheetContent>
           </Sheet>
@@ -81,18 +87,22 @@ export default function AppHeader() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+          <DropdownMenuItem asChild>
+            <Link href="/profile">
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <CreditCard className="mr-2 h-4 w-4" />
             <span>Points: 1,250</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Logout</span>
+          <DropdownMenuItem asChild>
+             <Link href="/">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+             </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

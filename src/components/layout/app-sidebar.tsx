@@ -56,8 +56,8 @@ export default function AppSidebar() {
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={5}>Profile</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
-      </nav>
+        </nav>
+      </TooltipProvider>
     </aside>
   );
 }
