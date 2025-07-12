@@ -40,7 +40,7 @@ export interface Swap {
   receiverID: string;
   itemARef: DocumentReference<Item>;
   itemBRef?: DocumentReference<Item>;
-  swapStatus: 'pending' | 'accepted' | 'shipped' | 'delivered' | 'completed' | 'disputed';
+  swapStatus: 'pending' | 'accepted' | 'shipped' | 'delivered' | 'completed' | 'disputed' | 'rejected' | 'cancelled';
   timestamps: {
     requestAt: Timestamp;
     acceptedAt?: Timestamp;

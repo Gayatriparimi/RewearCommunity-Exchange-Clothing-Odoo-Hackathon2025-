@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Check, X } from 'lucide-react';
+import { acceptSwapAction, declineSwapAction } from '../item/[id]/actions';
 
 const myItems = [
   { id: '1', title: 'Vintage Denim Jacket', status: 'Listed', swaps: 3 },
@@ -15,6 +16,11 @@ const ongoingSwaps = [
   { id: 'swap-1', item: 'Cozy Wool Sweater', with: 'Maria K.', status: 'Shipped' },
   { id: 'swap-2', item: 'Leather Ankle Boots', with: 'Alex P.', status: 'Request Sent' },
 ];
+
+const swapRequests = [
+    { id: 'req-1', item: 'Vintage Denim Jacket', from: 'Maria K.', status: 'Pending' },
+    { id: 'req-2', item: 'Summer Floral Dress', from: 'Sam D.', status: 'Pending' },
+]
 
 export default function DashboardPage() {
   return (
@@ -55,6 +61,7 @@ export default function DashboardPage() {
           <div className="flex items-center">
             <TabsList>
               <TabsTrigger value="my-listings">My Listings</TabsTrigger>
+              <TabsTrigger value="swap-requests">Swap Requests</TabsTrigger>
               <TabsTrigger value="ongoing-swaps">Ongoing Swaps</TabsTrigger>
               <TabsTrigger value="completed-swaps">Completed Swaps</TabsTrigger>
             </TabsList>
@@ -97,6 +104,47 @@ export default function DashboardPage() {
                   </TableBody>
                 </Table>
               </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="swap-requests">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Swap Requests</CardTitle>
+                    <CardDescription>Accept or decline requests from other users.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Item</TableHead>
+                                <TableHead>From User</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {swapRequests.map((req) => (
+                                <TableRow key={req.id}>
+                                    <TableCell className="font-medium">{req.item}</TableCell>
+                                    <TableCell>{req.from}</TableCell>
+                                    <TableCell><Badge variant="outline">{req.status}</Badge></TableCell>
+                                    <TableCell className="text-right">
+                                        <form action={acceptSwapAction.bind(null, req.id)} className="inline-flex">
+                                            <Button variant="ghost" size="icon">
+                                                <Check className="h-4 w-4 text-green-500" />
+                                            </Button>
+                                        </form>
+                                        <form action={declineSwapAction.bind(null, req.id)} className="inline-flex">
+                                            <Button variant="ghost" size="icon">
+                                                <X className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                        </form>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="ongoing-swaps">

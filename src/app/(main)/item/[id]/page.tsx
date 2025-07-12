@@ -1,3 +1,4 @@
+'use client';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star, MessageSquare } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { useToast } from '@/hooks/use-toast';
+import { requestSwapAction } from './actions';
 
 const item = {
   id: '1',
@@ -21,6 +24,7 @@ const item = {
     'https://placehold.co/600x800.png?3',
   ],
   user: {
+    id: 'user-b-id', // The item owner's ID
     name: 'Alex P.',
     location: 'Brooklyn, NY',
     rating: 4.8,
@@ -31,7 +35,33 @@ const item = {
 };
 
 export default function ItemDetailPage({ params }: { params: { id: string } }) {
-  // In a real app, you would fetch item data based on params.id
+  const { toast } = useToast();
+
+  const handleRequestSwap = async () => {
+    // In a real app, you'd get the current user's ID from your auth context
+    const senderId = 'user-a-id';
+    
+    // For now, we'll assume a one-way swap (no item from sender)
+    const result = await requestSwapAction({
+      senderID: senderId,
+      receiverID: item.user.id,
+      itemRequestedID: params.id,
+    });
+
+    if (result.success) {
+      toast({
+        title: 'Swap Requested!',
+        description: 'Your request has been sent to the item owner.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Request Failed',
+        description: result.error || 'Could not send swap request. Please try again.',
+      });
+    }
+  };
+
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2">
       <div className="grid gap-4">
@@ -124,7 +154,7 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
         </Card>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Button size="lg" className="font-bold">Swap Request</Button>
+          <Button size="lg" className="font-bold" onClick={handleRequestSwap}>Request Swap</Button>
           <Button size="lg" variant="secondary" className="font-bold">Redeem with 800 Points</Button>
         </div>
       </div>
