@@ -2,7 +2,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, CollectionReference, DocumentData } from 'firebase/firestore';
-import type { UserProfile, Swap, Tracking, AppNotification, Rating } from './types';
+import type { UserProfile, Item, Swap, Tracking, AppNotification, Rating, AdminLog, UserAddress } from './types';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -25,9 +25,11 @@ const createCollection = <T = DocumentData>(collectionName: string) => {
 };
 
 const usersCollection = createCollection<UserProfile>('users');
+const itemsCollection = createCollection<Item>('items');
 const swapsCollection = createCollection<Swap>('swaps');
 const notificationsCollection = createCollection<AppNotification>('notifications');
 const ratingsCollection = createCollection<Rating>('ratings');
+const adminLogsCollection = createCollection<AdminLog>('adminLogs');
 
 
 // Helper to get a typed subcollection
@@ -40,8 +42,10 @@ export {
     auth, 
     db,
     usersCollection,
+    itemsCollection,
     swapsCollection,
     notificationsCollection,
     ratingsCollection,
+    adminLogsCollection,
     createSubCollection,
 };

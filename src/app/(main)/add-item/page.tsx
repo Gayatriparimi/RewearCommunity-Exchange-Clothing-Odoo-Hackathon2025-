@@ -16,11 +16,13 @@ import { suggestTagsAction } from './actions';
 import { useToast } from '@/hooks/use-toast';
 
 const itemSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters long"),
+  title: z.string().min(4, "Title must be at least 4 characters long"),
   description: z.string().min(10, "Description must be at least 10 characters long"),
-  category: z.string().min(1, "Please select a category"),
-  size: z.string().min(1, "Please select a size"),
-  condition: z.string().min(1, "Please select a condition"),
+  category: z.enum(['Men', 'Women', 'Kids'], { required_error: "Please select a category" }),
+  size: z.enum(['S', 'M', 'L', 'XL', 'Free Size'], { required_error: "Please select a size" }),
+  condition: z.enum(['New', 'Like New', 'Used'], { required_error: "Please select a condition" }),
+  // images: z.array(z.any()).min(1, "At least one image is required"), // TODO: Implement image upload
+  tags: z.array(z.string()).max(6, "You can add a maximum of 6 tags").optional(),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
@@ -31,15 +33,15 @@ export default function AddItemPage() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
 
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<ItemFormValues>({
+  const { register, handleSubmit, control, watch, formState: { errors }, setValue } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
-    defaultValues: { title: "", description: "", category: "", size: "", condition: "" },
   });
 
   const formValues = watch();
 
   const handleSuggestTags = async () => {
-    if (!formValues.title || !formValues.description || !formValues.category) {
+    const category = formValues.category as string | undefined;
+    if (!formValues.title || !formValues.description || !category) {
       toast({
         variant: "destructive",
         title: "Missing Information",
@@ -52,11 +54,14 @@ export default function AddItemPage() {
       const result = await suggestTagsAction({
         title: formValues.title,
         description: formValues.description,
-        category: formValues.category,
+        category: category,
       });
 
       if (result.success && result.data) {
-        setTags(prevTags => [...new Set([...prevTags, ...result.data.tags])]);
+        const suggestedTags = result.data.tags.slice(0, 6 - tags.length);
+        const newTags = [...new Set([...tags, ...suggestedTags])];
+        setTags(newTags);
+        setValue('tags', newTags);
         toast({
           title: "Tags Suggested!",
           description: "We've added some AI-powered tag suggestions for your item.",
@@ -78,13 +83,25 @@ export default function AddItemPage() {
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && newTag.trim() !== '') {
       e.preventDefault();
-      setTags([...tags, newTag.trim()]);
-      setNewTag('');
+      if (tags.length < 6) {
+        const updatedTags = [...new Set([...tags, newTag.trim()])];
+        setTags(updatedTags);
+        setValue('tags', updatedTags);
+        setNewTag('');
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Tag limit reached",
+            description: "You can add a maximum of 6 tags.",
+        });
+      }
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    const updatedTags = tags.filter(tag => tag !== tagToRemove);
+    setTags(updatedTags);
+    setValue('tags', updatedTags);
   };
   
   const onSubmit = (data: ItemFormValues) => {
@@ -132,9 +149,9 @@ export default function AddItemPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Tags</CardTitle>
-                    <CardDescription>Add tags to help others discover your item.</CardDescription>
+                    <CardDescription>Add up to 6 tags to help others discover your item.</CardDescription>
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={handleSuggestTags} disabled={isSuggesting}>
+                  <Button type="button" variant="outline" size="sm" onClick={handleSuggestTags} disabled={isSuggesting || tags.length >= 6}>
                     {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Suggest Tags
                   </Button>
@@ -156,7 +173,9 @@ export default function AddItemPage() {
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyDown={handleAddTag}
+                  disabled={tags.length >= 6}
                 />
+                 {errors.tags && <p className="text-sm text-red-500 mt-1">{errors.tags.message}</p>}
               </CardContent>
             </Card>
           </div>
@@ -164,7 +183,7 @@ export default function AddItemPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Images</CardTitle>
-                <CardDescription>Upload up to 5 images.</CardDescription>
+                <CardDescription>Upload at least 1 image.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-2">
@@ -189,12 +208,9 @@ export default function AddItemPage() {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="tops">Tops</SelectItem>
-                          <SelectItem value="bottoms">Bottoms</SelectItem>
-                          <SelectItem value="dresses">Dresses</SelectItem>
-                          <SelectItem value="outerwear">Outerwear</SelectItem>
-                          <SelectItem value="accessories">Accessories</SelectItem>
-                          <SelectItem value="shoes">Shoes</SelectItem>
+                          <SelectItem value="Men">Men</SelectItem>
+                          <SelectItem value="Women">Women</SelectItem>
+                          <SelectItem value="Kids">Kids</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -210,11 +226,11 @@ export default function AddItemPage() {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger><SelectValue placeholder="Select a size" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="xs">Extra Small</SelectItem>
-                          <SelectItem value="s">Small</SelectItem>
-                          <SelectItem value="m">Medium</SelectItem>
-                          <SelectItem value="l">Large</SelectItem>
-                          <SelectItem value="xl">Extra Large</SelectItem>
+                           <SelectItem value="S">S</SelectItem>
+                           <SelectItem value="M">M</SelectItem>
+                           <SelectItem value="L">L</SelectItem>
+                           <SelectItem value="XL">XL</SelectItem>
+                           <SelectItem value="Free Size">Free Size</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -230,10 +246,9 @@ export default function AddItemPage() {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="new">New with tags</SelectItem>
-                          <SelectItem value="like-new">Like New</SelectItem>
-                          <SelectItem value="gently-used">Gently Used</SelectItem>
-                          <SelectItem value="used">Used</SelectItem>
+                          <SelectItem value="New">New</SelectItem>
+                          <SelectItem value="Like New">Like New</SelectItem>
+                          <SelectItem value="Used">Used</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
