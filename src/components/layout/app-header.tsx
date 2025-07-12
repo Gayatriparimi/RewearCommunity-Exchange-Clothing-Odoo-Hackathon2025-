@@ -1,3 +1,5 @@
+"use client";
+
 import Link from 'next/link'
 import {
   Search,
@@ -18,8 +20,20 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ThemeToggle } from '../theme-toggle'
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/firebase';
 
 export default function AppHeader() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
        <Sheet>
@@ -85,7 +99,7 @@ export default function AppHeader() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>{user?.email || 'My Account'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href="/profile">
@@ -98,11 +112,9 @@ export default function AppHeader() {
             <span>Points: 1,250</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-             <Link href="/">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
-             </Link>
+          <DropdownMenuItem onClick={handleLogout}>
+             <LogOut className="mr-2 h-4 w-4" />
+             <span>Logout</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
