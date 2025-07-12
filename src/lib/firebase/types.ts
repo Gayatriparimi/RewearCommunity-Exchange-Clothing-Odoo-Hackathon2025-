@@ -4,6 +4,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   name: string;
+  role?: 'user' | 'admin';
   createdAt: Timestamp;
   location?: string;
   bio?: string;

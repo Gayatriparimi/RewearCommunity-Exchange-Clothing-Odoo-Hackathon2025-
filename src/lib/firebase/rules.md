@@ -8,69 +8,71 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if a user is an admin
+    // Helper function to check if a user is an admin by checking their role in their user document.
     function isAdmin() {
-      // In a real app, this would check a custom claim or an 'admins' collection
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Helper function to check if user is involved in a swap
+    // Helper function to check if the requesting user is one of the two parties involved in a swap.
     function isUserInSwap(swapId) {
       let swap = get(/databases/$(database)/documents/swaps/$(swapId)).data;
       return request.auth.uid == swap.requesterId.id || request.auth.uid == swap.responderId.id;
     }
-
+    
     // ===== USER PROFILES =====
-    // Users can read any profile (for viewing item listers) but only write to their own.
-    // Addresses are stored in a private subcollection.
+    // Users can read any profile (for viewing item listers), but only write to their own profile.
+    // An admin can update any user's profile, for moderation purposes.
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
+      allow write: if request.auth.uid == userId || isAdmin();
 
-      // Address subcollection: Only the owner can read/write their own address.
+      // Address subcollection: Only the owner or an admin can access a user's address.
       match /addresses/{addressId} {
-        allow read, write: if request.auth.uid == userId;
+        allow read, write: if request.auth.uid == userId || isAdmin();
       }
     }
 
     // ===== ITEMS =====
-    // Anyone can browse items. Users can only create items for themselves.
-    // Only the item owner can update or delete it.
+    // Anyone can browse items. Authenticated users can create items for themselves.
+    // Only the item owner or an admin can update or delete an item.
     match /items/{itemId} {
       allow read: if true;
       allow create: if request.auth.uid == request.resource.data.listedBy.id;
-      allow update, delete: if get(/databases/$(database)/documents/items/$(itemId)).data.listedBy.id == request.auth.uid;
+      allow update, delete: if get(/databases/$(database)/documents/items/$(itemId)).data.listedBy.id == request.auth.uid || isAdmin();
     }
     
     // ===== SWAPS =====
-    // Swaps can only be read by involved parties or an admin.
-    // Creation requires authenticated user.
-    // Updates are restricted to involved parties.
+    // Swaps can only be read by the involved parties or an admin.
+    // Creation requires an authenticated user.
+    // Updates are restricted to involved parties or an admin.
+    // Deletion is not allowed to preserve swap history.
     match /swaps/{swapId} {
-      allow read: if isUserInSwap(swapId) || isAdmin();
+      allow read, update: if isUserInSwap(swapId) || isAdmin();
       allow create: if request.auth != null;
-      allow update: if isUserInSwap(swapId);
+      allow delete: if false;
 
-      // Tracking subcollection: Only involved parties or admin can access.
+      // Tracking subcollection: Only involved parties or an admin can access.
       match /tracking/{trackingId} {
         allow read, write: if isUserInSwap(swapId) || isAdmin();
       }
     }
 
     // ===== NOTIFICATIONS =====
-    // Users can only read notifications intended for them.
+    // Users can only read notifications intended for them. An admin can read any notification.
     // Notifications are created by server-side logic (Firebase Functions), so client-side `create` is denied.
     match /notifications/{notificationId} {
-      allow read, update: if get(/databases/$(database)/documents/notifications/$(notificationId)).data.recipientId.id == request.auth.uid;
+      allow read, update: if get(/databases/$(database)/documents/notifications/$(notificationId)).data.recipientId.id == request.auth.uid || isAdmin();
       allow create, delete: if false; // Managed by backend triggers
     }
 
     // ===== RATINGS =====
-    // Logged-in users can create ratings.
-    // All ratings are public to read.
+    // All users can read ratings to see community feedback.
+    // Only an authenticated user who was part of the swap can create a rating.
+    // Ratings are immutable once created.
     match /ratings/{ratingId} {
         allow read: if true;
-        allow create: if request.auth != null && request.auth.uid == request.resource.data.ratedBy.id;
+        // Ensure the rater is who they say they are, and was part of the rated swap.
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.ratedBy.id && isUserInSwap(request.resource.data.swapId.id);
         allow update, delete: if false; // Ratings are immutable
     }
 
